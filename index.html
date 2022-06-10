@@ -1,0 +1,98 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Blind Contour App</title>
+    <script>
+      function onload() {
+        const canvas = document.getElementById('cnv');
+        const ctx = canvas.getContext('2d');
+        const startBtn = document.getElementById('startBtn');
+
+        // Trigger canvas resizing on window resize
+        function resize() {
+          canvas.width = window.innerWidth;
+          canvas.height = window.innerHeight;
+        }
+        resize()
+        window.addEventListener('resize', resize)
+
+        let drawingOn = false;
+        let prevX = null;
+        let prevY = null;
+        let currX = null;
+        let currY = null;
+        function shiftKeyDownListener(e) {
+          if (e.keyCode === 16) {
+            drawingOn = true;
+
+            prevX = currX;
+            prevY = currY;
+          }
+        }
+        function shiftKeyUpListener(e) {
+          if (e.keyCode === 16) {
+            drawingOn = false;
+          }
+        }
+
+        // Drawing logic
+        function mouseMoveListener(e) {
+          currX = e.clientX;
+          currY = e.clientY;
+
+          if (!drawingOn ) {
+            return;
+          }
+
+          ctx.beginPath();
+          ctx.moveTo(prevX, prevY);
+          ctx.lineTo(currX, currY);
+          ctx.stroke();
+
+          prevX = currX;
+          prevY = currY;
+        }
+
+        function startDrawMode() {
+          console.log("clicked");
+
+          // Display instruction
+          startBtn.style.display = "none";
+          ctx.font = '48px serif';
+          ctx.fillText('Hello world', 10, 50);
+
+          // Attach listeners for start event
+          window.addEventListener("keydown", shiftKeyDownListener);
+          window.addEventListener("keyup", shiftKeyUpListener);
+          window.addEventListener("mousemove", mouseMoveListener);
+        }
+
+        if (canvas.getContext) {
+          startBtn.addEventListener("click", startDrawMode);
+        }
+
+      }
+    </script>
+    <style>
+      #cnv { 
+        background-color: rgba(220, 209, 191, 0.6); 
+      }
+      #canvasWrapper {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+      }
+    </style>
+</head>
+<body onload="onload();">
+    <div>
+      <button id="startBtn">start</button>
+    </div>
+    <div id="canvasWrapper">
+      <canvas id="cnv" width="500" height="500"><canvas />
+    </div>
+</body>
+</html>
