@@ -4,12 +4,14 @@
     <meta charset="UTF-8">
     <meta http-equiv="X-UA-Compatible" content="IE=edge">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Blind Contour App</title>
+    <title>BCD - Blind Contour Drawing</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@100;300;400;500&display=swap" rel="stylesheet">
     <script>
       function onload() {
         const canvas = document.getElementById('cnv');
         const ctx = canvas.getContext('2d');
-        const startBtn = document.getElementById('startBtn');
 
         // Trigger canvas resizing on window resize
         function resize() {
@@ -19,31 +21,55 @@
         resize()
         window.addEventListener('resize', resize)
 
-        let drawingOn = false;
+        // Trigger drawing mode on shift keydown, stop drawing mode on shift keyup
+        let isDrawingOn = false;
+        let isBlind = false;
+        let isDone = false;
         let prevX = null;
         let prevY = null;
         let currX = null;
         let currY = null;
-        function shiftKeyDownListener(e) {
-          if (e.keyCode === 16) {
-            drawingOn = true;
+        function keydownListener(e) {
+          console.log(e.keyCode, isDone)
+          if (e.keyCode === 16 && !isDone) { // shift key 
+            // Enable drawing mode
+            isDrawingOn = true;
 
+            // Set initial cursor position
             prevX = currX;
             prevY = currY;
-          }
+
+            // Hide instructions
+            const modal = document.getElementById("modal");
+            modal.style.visibility = "hidden";
+          } else if (e.keyCode === 32) {
+            toggleIsBlind();
+          } 
         }
-        function shiftKeyUpListener(e) {
+        function keyupListener(e) {
           if (e.keyCode === 16) {
-            drawingOn = false;
+            isDrawingOn = false;
+            isDone = true;
+            toggleIsBlind(true);
+          } 
+        }
+        function toggleIsBlind(isDone = false) {
+          isBlind = !isBlind;
+
+          if (!isBlind || isDone) {
+            canvas.style.background = 'rgba(220, 209, 191, 0.6)';
+          } else {
+            canvas.style.background = 'rgba(0,0,0,1)';
           }
         }
 
-        // Drawing logic
+        // Track mouse position and if drawing is on, render strokes
+        // on canvas
         function mouseMoveListener(e) {
           currX = e.clientX;
           currY = e.clientY;
 
-          if (!drawingOn ) {
+          if (!isDrawingOn) {
             return;
           }
 
@@ -56,43 +82,60 @@
           prevY = currY;
         }
 
-        function startDrawMode() {
-          console.log("clicked");
+        // Attach listeners for start and stop events triggered by shift key
+        window.addEventListener("keydown", keydownListener);
+        window.addEventListener("keyup", keyupListener);
 
-          // Display instruction
-          startBtn.style.display = "none";
-          ctx.font = '48px serif';
-          ctx.fillText('Hello world', 10, 50);
-
-          // Attach listeners for start event
-          window.addEventListener("keydown", shiftKeyDownListener);
-          window.addEventListener("keyup", shiftKeyUpListener);
-          window.addEventListener("mousemove", mouseMoveListener);
-        }
-
-        if (canvas.getContext) {
-          startBtn.addEventListener("click", startDrawMode);
-        }
-
+        // Attach listener for mousemove / drawing
+        window.addEventListener("mousemove", mouseMoveListener);
       }
     </script>
     <style>
-      #cnv { 
-        background-color: rgba(220, 209, 191, 0.6); 
+      body { 
+        margin: 0; 
+        font-family: 'Roboto';
+        color: rgb(164, 176, 190);
+      }
+      #container {
+        position: relative;
       }
       #canvasWrapper {
         display: flex;
         align-items: center;
         justify-content: center;
       }
+      #cnv { 
+        background-color: rgba(220, 209, 191, 0.6); 
+      }
+      #modal {
+        position: absolute;
+        width: 300px;
+        height: 100px;
+        top: 15px;
+        left: 15px;
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        flex-direction: column;
+        
+        background-color: rgba(255, 255, 255, 0.7);
+        border-radius: 20px;
+        padding: 2px 10px;
+
+        font-weight: 300;
+      }
     </style>
 </head>
 <body onload="onload();">
-    <div>
-      <button id="startBtn">start</button>
-    </div>
+  <div id="container">
     <div id="canvasWrapper">
-      <canvas id="cnv" width="500" height="500"><canvas />
+      <canvas id="cnv"><canvas />
     </div>
+    <div id="modal">
+      <div>Hold the <b>SHIFT</b> key to start drawing</div>
+      <div>Release the <b>SHIFT</b> key to finish drawing</div>
+      <div>Tap the <b>SPACE</b> key to toggle blind mode</div>
+    </div>
+  </div>
 </body>
 </html>
