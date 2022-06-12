@@ -18,7 +18,7 @@
         const canvas = document.getElementById('cnv');
         const ctx = canvas.getContext('2d');
 
-        // Trigger canvas resizing on window resize
+        // Trigger canvas resizing on window resize so canvas is full screen
         function resize() {
           canvas.width = window.innerWidth;
           canvas.height = window.innerHeight;
@@ -26,7 +26,10 @@
         resize()
         window.addEventListener('resize', resize)
 
-        // Trigger drawing mode on shift keydown, stop drawing mode on shift keyup
+        // Key triggers:
+        // 1) Enable drawing mode on shift key down 
+        // 2) Enable blind drawing mode on space key down
+        // 3) Turn off drawing mode on shift key up and blind drawing mode
         let currState = DRAW_STATE.INITIALIZED;
         let isBlind = false;
         let prevX = null;
@@ -34,11 +37,12 @@
         let currX = null;
         let currY = null;
         function keydownListener(e) {
+          // Ignore all key downs if draw state is done
           if (currState === DRAW_STATE.DONE) {
             return;
           }
 
-          if (e.keyCode === 16) { // shift key 
+          if (currState === DRAW_STATE.INITIALIZED && e.keyCode === 16) { // shift key 
             // Enable drawing mode
             currState = DRAW_STATE.DRAWING;
 
@@ -49,16 +53,14 @@
             // Hide instructions
             const instructions = document.getElementById("instructions");
             instructions.style.visibility = "hidden";
-          } else if (e.keyCode === 32) { // space key
-            if (currState !== DRAW_STATE.DRAWING) {
-              return;
-            }
+          } else if (currState === DRAW_STATE.DRAWING && e.keyCode === 32) { // space key
             isBlind = !isBlind;
             changeBackground(isBlind);
           } 
         }
         function keyupListener(e) {
-          if (currState === DRAW_STATE.DONE) {
+          // Only listen for key up when user is drawing
+          if (currState !== DRAW_STATE.DRAWING) {
             return;
           }
 
