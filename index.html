@@ -9,6 +9,11 @@
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@100;300;400;500&display=swap" rel="stylesheet">
     <script>
+      const DRAW_STATE = {
+        INITIALIZED: 0,
+        DRAWING: 1,
+        DONE: 2,
+      }
       function onload() {
         const canvas = document.getElementById('cnv');
         const ctx = canvas.getContext('2d');
@@ -22,44 +27,51 @@
         window.addEventListener('resize', resize)
 
         // Trigger drawing mode on shift keydown, stop drawing mode on shift keyup
-        let isDrawingOn = false;
+        let currState = DRAW_STATE.INITIALIZED;
         let isBlind = false;
-        let isDone = false;
         let prevX = null;
         let prevY = null;
         let currX = null;
         let currY = null;
         function keydownListener(e) {
-          console.log(e.keyCode, isDone)
-          if (e.keyCode === 16 && !isDone) { // shift key 
+          if (currState === DRAW_STATE.DONE) {
+            return;
+          }
+
+          if (e.keyCode === 16) { // shift key 
             // Enable drawing mode
-            isDrawingOn = true;
+            currState = DRAW_STATE.DRAWING;
 
             // Set initial cursor position
             prevX = currX;
             prevY = currY;
 
             // Hide instructions
-            const modal = document.getElementById("modal");
-            modal.style.visibility = "hidden";
-          } else if (e.keyCode === 32) {
-            toggleIsBlind();
+            const instructions = document.getElementById("instructions");
+            instructions.style.visibility = "hidden";
+          } else if (e.keyCode === 32) { // space key
+            if (currState !== DRAW_STATE.DRAWING) {
+              return;
+            }
+            isBlind = !isBlind;
+            changeBackground(isBlind);
           } 
         }
         function keyupListener(e) {
-          if (e.keyCode === 16) {
-            isDrawingOn = false;
-            isDone = true;
-            toggleIsBlind(true);
+          if (currState === DRAW_STATE.DONE) {
+            return;
+          }
+
+          if (e.keyCode === 16) { // shift key
+            currState = DRAW_STATE.DONE;
+            changeBackground(false);
           } 
         }
-        function toggleIsBlind(isDone = false) {
-          isBlind = !isBlind;
-
-          if (!isBlind || isDone) {
-            canvas.style.background = 'rgba(220, 209, 191, 0.6)';
-          } else {
+        function changeBackground(isBlind) {
+          if (isBlind) {
             canvas.style.background = 'rgba(0,0,0,1)';
+          } else {
+            canvas.style.background = 'rgba(251, 243, 232, 0.8)';
           }
         }
 
@@ -69,7 +81,7 @@
           currX = e.clientX;
           currY = e.clientY;
 
-          if (!isDrawingOn) {
+          if (currState !== DRAW_STATE.DRAWING) {
             return;
           }
 
@@ -105,9 +117,10 @@
         justify-content: center;
       }
       #cnv { 
-        background-color: rgba(220, 209, 191, 0.6); 
+        background: rgba(251, 243, 232, 0.8);
+		    background-size: 16px 16px;
       }
-      #modal {
+      #instructions {
         position: absolute;
         width: 300px;
         height: 100px;
@@ -131,7 +144,7 @@
     <div id="canvasWrapper">
       <canvas id="cnv"><canvas />
     </div>
-    <div id="modal">
+    <div id="instructions">
       <div>Hold the <b>SHIFT</b> key to start drawing</div>
       <div>Release the <b>SHIFT</b> key to finish drawing</div>
       <div>Tap the <b>SPACE</b> key to toggle blind mode</div>
